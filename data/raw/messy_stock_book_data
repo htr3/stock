@@ -1,0 +1,354 @@
+prompt 1 
+
+[ { "name": "Hollow (White) Candlestick", "type": "bullish", "conditions": "The closing price is higher than the opening price.", "reliability": "Not explicitly mentioned", "ideal market condition": "trend" }, { "name": "Filled (Black/Red) Candlestick", "type": "bearish", "conditions": "The closing price is lower than the opening price.", "reliability": "Not explicitly mentioned", "ideal market condition": "trend" }, { "name": "Spinning Top", "type": "neutral", "conditions": "Small real body with similarly-sized upper and lower wicks that are larger than the body.", "reliability": "Indicates uncertainty and an even balance between buyers and sellers; trends can change immediately after.", "ideal market condition": "reversal" }, { "name": "Doji", "type": "neutral", "conditions": "The opening and closing prices are equal or almost equal, resulting in no real body or a very small body.", "reliability": "Reflects a state of implied balance and indecision; vital clue that a trend may be about to change.", "ideal market condition": "reversal" }, { "name": "Long-Legged Doji", "type": "neutral", "conditions": "The open and close prices are identical, accompanied by very long upper and lower shadows/wicks.", "reliability": "Reflects considerable indecision and can be quite ominous after a long white candlestick.", "ideal market condition": "reversal" }, { "name": "Gravestone Doji", "type": "bearish", "conditions": "The open and close prices are equal, with a long upper shadow and no lower shadow.", "reliability": "The longer the upper shadow, the more bearish the interpretation.", "ideal market condition": "reversal" }, { "name": "Dragonfly Doji", "type": "bullish", "conditions": "The open and close prices are equal (resembling a 'T'), with a long lower shadow and no upper shadow.", "reliability": "Usually considered quite bullish.", "ideal market condition": "reversal" }, { "name": "Shooting Star", "type": "bearish", "conditions": "Small real body at the lower end of the trading range with a long upper shadow/wick; often occurs with a small gap.", "reliability": "Indicates buyers tried to push the price up but failed, leaving sellers to potentially take control.", "ideal market condition": "reversal" }, { "name": "Hammer", "type": "bullish", "conditions": "Small real body at the upper end of the trading range with a long lower shadow/wick, developing after a decline.", "reliability": "Indicates seller exhaustion.", "ideal market condition": "reversal" }, { "name": "Hanging Man", "type": "bearish", "conditions": "Small real body at the upper end of the trading range with a very long lower shadow/wick, developing after an advance.", "reliability": "Requires confirmation, such as a long black candlestick the following day.", "ideal market condition": "reversal" }, { "name": "Dark Cloud Cover (Kabuse)", "type": "bearish", "conditions": "Two-day pattern: The 1st day is a strong white candlestick. The 2nd day is a black candlestick that opens above the upper wick of the white candlestick and closes below the midpoint of the previous white real body.", "reliability": "A significant blow to bullish mentality, often forcing traders to exit.", "ideal market condition": "reversal" }, { "name": "Piercing Line (Kirikorni)", "type": "bullish", "conditions": "Two-day pattern: The 1st day is a long black candlestick. The 2nd day is a white candlestick that opens below the lower wick of the black candlestick and closes more than halfway above the black real body.", "reliability": "Offers a significant change to downtrend mentality.", "ideal market condition": "reversal" }, { "name": "Evening Star", "type": "bearish", "conditions": "Three-day pattern: The 1st day is a long white candlestick. The 2nd day is a small body (star) that gaps above the 1st day's body. The 3rd day is a black candlestick that gaps below the star's body and closes below the midpoint of the 1st day's body.", "reliability": "A powerful reversal pattern that works exceptionally well.", "ideal market condition": "reversal" }, { "name": "Morning Star", "type": "bullish", "conditions": "Three-day pattern: The 1st day is a long black candlestick. The 2nd day is a small body (star) that gaps below the 1st day's body. The 3rd day is a white candlestick that closes more than halfway up the 1st day's body.", "reliability": "A powerful reversal pattern that works exceptionally well.", "ideal market condition": "reversal" }, { "name": "Evening Doji Star", "type": "bearish", "conditions": "Similar to the Evening Star, but the 2nd day is a Doji line that gaps above the 1st day's real body.", "reliability": "Not explicitly quantified, but signifies a strong reversal after a lengthy rally.", "ideal market condition": "reversal" }, { "name": "Morning Doji Star", "type": "bullish", "conditions": "Similar to the Morning Star, but the 2nd day is a Doji line that gaps below the 1st day's real body.", "reliability": "Opening gap confirmation results in the best performance.", "ideal market condition": "reversal" }, { "name": "Rising Three Methods", "type": "bullish", "conditions": "Five-day pattern: The 1st day is a long white candle. The next 3 (or 4) days are small body candles (at least two black) trending downward but remaining within the range of the 1st day's body. The final day is a long white candle that closes at a new high.", "reliability": "Particularly good at trend continuation identification.", "ideal market condition": "continuation" }, { "name": "Falling Three Methods", "type": "bearish", "conditions": "Five-day pattern: The 1st day is a long black candle. The next 3 (or 4) days are small rising white real bodies bounded by the 1st day's range. The final day is a strong black candle that closes at a new low.", "reliability": "Particularly good at trend continuation identification.", "ideal market condition": "continuation" }, { "name": "Bullish Belt Hold (Yorikiri)", "type": "bullish", "conditions": "One-day pattern: A long white candlestick that opens on the session low and works its way higher throughout the session.", "reliability": "Gains importance if it hasn't appeared for a while. The longer the real body, the more positive the signal.", "ideal market condition": "reversal" }, { "name": "Bullish Engulfing Pattern", "type": "bullish", "conditions": "Two-day pattern: A white candlestick completely engulfs the real body of the previous day's black candlestick.", "reliability": "Not explicitly mentioned", "ideal market condition": "reversal" }, { "name": "Bearish Engulfing Pattern", "type": "bearish", "conditions": "Two-day pattern: A black candlestick completely engulfs the real body of the previous day's white candlestick.", "reliability": "Not explicitly mentioned", "ideal market condition": "reversal" }, { "name": "Upside Gap Two Crows (Narabi Kuro)", "type": "bearish", "conditions": "Three-day pattern: A long white line followed by two black lines. The 1st black line gaps to the upside. The 2nd black line engulfs the first and closes the gap, but its close is below its open.", "reliability": "Not explicitly mentioned", "ideal market condition": "reversal" }, { "name": "Three Black Crows (Sanba Garasu)", "type": "bearish", "conditions": "Three declining black candlesticks. Each opens within the range or at the bottom of the previous session's real body and closes at or near its session low with no lower wick.", "reliability": "Not explicitly mentioned", "ideal market condition": "reversal" }, { "name": "Tweezer Top", "type": "bearish", "conditions": "Two or more candlesticks that make an identical high (can be shadow, real-body close, or open).", "reliability": "Significance increases if the pattern forms part of another reversal pattern (e.g., if the second day is a hanging man).", "ideal market condition": "reversal" }, { "name": "Tweezer Bottom", "type": "bullish", "conditions": "Two or more candlesticks that make an identical low after a decline.", "reliability": "Not explicitly mentioned", "ideal market condition": "reversal" }, { "name": "Bullish Counterattack Line (Meeting Line)", "type": "bullish", "conditions": "Two-day pattern: The 1st day is a long black candlestick. The 2nd day opens sharply lower but closes at the exact same level as the 1st day's close (creating a white candlestick).", "reliability": "Sharp contrast between two long real bodies is highly significant; indicates downside momentum has dissipated.", "ideal market condition": "reversal" }, { "name": "Bearish Counterattack Line (Meeting Line)", "type": "bearish", "conditions": "Two-day pattern: The 1st day is a long white candlestick. The 2nd day opens sharply higher but closes at the exact same level as the 1st day's close (creating a black candlestick).", "reliability": "Euphoria turns to disappointment rapidly; not to be underestimated.", "ideal market condition": "reversal" }, { "name": "Tower Top", "type": "bearish", "conditions": "A rally culminating in a long white candlestick, followed by a trading range (gradually working higher then lower), completed with a long black day that opens roughly where the white day closed.", "reliability": "Not explicitly mentioned", "ideal market condition": "reversal" }, { "name": "Tower Bottom", "type": "bullish", "conditions": "A decline culminating in a long black candlestick, followed by a trading range, completed with a long white day that opens roughly where the black day closed.", "reliability": "Not explicitly mentioned", "ideal market condition": "reversal" }, { "name": "Bearish Harami", "type": "bearish", "conditions": "Two-day pattern: A long white candlestick followed by a small real body that is completely engulfed by the previous white candlestick.", "reliability": "Not explicitly mentioned", "ideal market condition": "reversal" }, { "name": "Bullish Harami", "type": "bullish", "conditions": "Two-day pattern: A long black candlestick followed by a small real body that is completely engulfed by the previous black candlestick.", "reliability": "Not explicitly mentioned", "ideal market condition": "reversal" }, { "name": "Upside Tasuki Gap", "type": "bullish", "conditions": "After an advance, an upside white-line gap occurs followed by a black line that does not close the gap.", "reliability": "Usually followed by higher prices; loses bullish portent if the gap is filled.", "ideal market condition": "continuation" }, { "name": "Downside Tasuki Gap", "type": "bearish", "conditions": "After a decline, a downside black-line gap occurs followed by a white line that does not close the gap.", "reliability": "Not explicitly mentioned", "ideal market condition": "continuation" }, { "name": "Umbrella Line", "type": "neutral", "conditions": "Opening and closing prices develop close to the high of the day, resulting in a square-like real body with a long lower wick.", "reliability": "Tends to be bullish after a decline and bearish following an advance. Has no real significance within a trading range.", "ideal market condition": "reversal" } ]
+
+
+prompt 2 
+
+```json
+[
+  {
+    "name": "The Opening Gap",
+    "entry condition": "Wait for an opening gap (up or down). If the pre-market volume is low to moderate, fade the gap (e.g., if it gaps down, buy at the market; if it gaps up, short at the market).",
+    "exit condition": "Exit half of the position at 50% gap fill, and leave the remaining half for a full gap fill target.",
+    "stop loss logic": "Use a set risk-reward ratio depending on gap size (e.g., 1.5:1 or 1:1 points-based stops for E-mini S&Ps or Dow). Do not trail stops.",
+    "indicators used": "Pre-market Volume, Gap size",
+    "timeframe suitability": "5-minute (tracked on a 24-hour special intraday chart)"
+  },
+  {
+    "name": "Pivot Point Buys/Sells on Trending Days",
+    "entry condition": "Wait for a decline (or rally) into the closest pivot level. Place a limit order 'just in front of' the pivot level.",
+    "exit condition": "Close the first half of the position at the next pivot level, and the second half at the pivot level after that.",
+    "stop loss logic": "Use a fixed point stop (e.g., 20 points for YM, 2 points for ES). Once the first target is hit, move the stop up to the entry pivot minus the 'just in front of' fraction.",
+    "indicators used": "Daily and Weekly Floor Pivots",
+    "timeframe suitability": "5-minute"
+  },
+  {
+    "name": "Pivot Point Buys/Sells on Choppy Days",
+    "entry condition": "Fade moves to the nearest pivot level by placing limit orders just in front of the pivot.",
+    "exit condition": "Mechanical first target (e.g., 10 points for YM, 1 point for ES) for half the position. Second target is 'just in front of' the next actual pivot level.",
+    "stop loss logic": "Fixed point stop placed on the other side of the pivot. Trail stop once first target is hit.",
+    "indicators used": "Daily and Weekly Floor Pivots, Volume",
+    "timeframe suitability": "5-minute"
+  },
+  {
+    "name": "Scalper Buys and Sells",
+    "entry condition": "For buys, go long at the market at the close of the third consecutive higher close. (Reverse for sells).",
+    "exit condition": "Exit when a reversal signal develops (e.g., three lower closes after a rally) or exit at the market at 4:10 p.m. Eastern.",
+    "stop loss logic": "Place a stop at the low (for longs) or high (for shorts) of the bar that caused the entry signal to fire.",
+    "indicators used": "24-hour price action / 'Paint bar' indicator",
+    "timeframe suitability": "Tick charts (e.g., 144-tick or 233-tick) or 5-minute / 15-minute"
+  },
+  {
+    "name": "Tick Fades",
+    "entry condition": "Wait for extreme tick readings (+1000 or -1000). If ticks hit +1000, fade the move by shorting at the market. If ticks hit -1000, buy at the market.",
+    "exit condition": "Take profit at a specific point target (e.g., 20-point target on YM) or exit when a timer goes off (time-based exit).",
+    "stop loss logic": "Fixed point stop (e.g., 30-point stop on YM) or a strict time limit (exit after 35 minutes regardless of P&L).",
+    "indicators used": "NYSE TICK ($TICK)",
+    "timeframe suitability": "5-minute"
+  },
+  {
+    "name": "ABCD Pattern",
+    "entry condition": "Identify a surge (A) to a peak (B), followed by a pullback to a higher low (C). Enter as close to point C as possible when the price is holding support.",
+    "exit condition": "Sell half at the breakout of point D (the new high). Sell the remaining position when the profit target hits or buyers show exhaustion (e.g., making a new 5-minute low).",
+    "stop loss logic": "Loss of point C. If the price goes lower than point C, sell to cut losses.",
+    "indicators used": "VWAP, Support/Resistance, Volume",
+    "timeframe suitability": "1-minute and 5-minute"
+  },
+  {
+    "name": "Bull Flag Momentum",
+    "entry condition": "Identify a strong surge (pole) followed by a consolidation (flag). Enter the trade as soon as prices break over the high of the consolidation.",
+    "exit condition": "Sell half on the way up to take profit. Sell the remainder when the profit target is hit or the price loses momentum.",
+    "stop loss logic": "Break below the consolidation (flag) period.",
+    "indicators used": "Volume, Price Action",
+    "timeframe suitability": "1-minute and 5-minute"
+  },
+  {
+    "name": "Top and Bottom Reversal",
+    "entry condition": "After a strong run making consecutive new highs/lows, wait for an indecision candle (Doji/spinning top) near a significant support or resistance level. Enter when the first 1-min or 5-min candle makes a new high (bottom reversal) or new low (top reversal).",
+    "exit condition": "Take profit when the price reaches a moving average (9 EMA, 20 EMA, or VWAP) or the next important intraday level.",
+    "stop loss logic": "Low of the previous candlestick or loss of the support/resistance level.",
+    "indicators used": "RSI (extremes), Moving Averages (9 EMA, 20 EMA), VWAP, Candlestick patterns (Doji)",
+    "timeframe suitability": "5-minute (sometimes 1-minute)"
+  },
+  {
+    "name": "Moving Average Trend Trading",
+    "entry condition": "Wait for a pullback to a moving average (like 9 EMA or 20 EMA) during an established trend. Buy (or short) when the price confirms the moving average as support (or resistance).",
+    "exit condition": "Take partial profits if extended. Exit the remainder when the moving average support or resistance finally breaks.",
+    "stop loss logic": "A close below the moving average (for long positions) or above it (for short positions).",
+    "indicators used": "9 EMA, 20 EMA, 50 SMA, 200 SMA",
+    "timeframe suitability": "1-minute and 5-minute"
+  },
+  {
+    "name": "VWAP Trading",
+    "entry condition": "Buy when the price pulls back to and holds above VWAP, or sell short when it pulls back to and holds below VWAP, aligning with market sentiment.",
+    "exit condition": "Exit at the next support or resistance level or moving average.",
+    "stop loss logic": "A break and close on the opposite side of VWAP.",
+    "indicators used": "VWAP",
+    "timeframe suitability": "1-minute and 5-minute"
+  },
+  {
+    "name": "Support or Resistance Trading",
+    "entry condition": "Monitor price action around daily support or resistance areas. Enter when an indecision candle confirms the level as support or resistance.",
+    "exit condition": "Take profit near the next support or resistance level, or at half-dollar/round-dollar marks.",
+    "stop loss logic": "A break and a close of a 5-minute candlestick under the support (or over the resistance) level.",
+    "indicators used": "Daily Support and Resistance levels, Candlestick patterns",
+    "timeframe suitability": "5-minute"
+  },
+  {
+    "name": "Red-to-Green Trading",
+    "entry condition": "Watch for a stock that opens below the previous day's close (red), then surges above it (green) on high volume. Go long on the crossover.",
+    "exit condition": "Take profit at the next resistance level.",
+    "stop loss logic": "The break of VWAP or falling back below the previous day's close.",
+    "indicators used": "Previous day's close, VWAP, Volume",
+    "timeframe suitability": "1-minute and 5-minute"
+  },
+  {
+    "name": "Opening Range Breakouts (ORB)",
+    "entry condition": "Wait for the opening range to form (first 5, 15, or 30 minutes). Enter long if the price breaks above the range high, or short if it breaks below the range low.",
+    "exit condition": "Target the next important technical level (daily levels, MAs, previous close). Exit if the stock shows weakness (e.g., new 5-minute low in a long trade).",
+    "stop loss logic": "A close below VWAP (for long positions) or above VWAP (for short positions).",
+    "indicators used": "VWAP, Opening Range highs/lows, Volume",
+    "timeframe suitability": "1-min, 5-min, 15-min, 30-min"
+  },
+  {
+    "name": "Trend Resumption After a Correction Upto a Support or Resistance",
+    "entry condition": "In an established trend, wait for a retracement to a support/resistance level (Pivots, MAs, previous close). Enter on the break of the high of the last bearish candle (in an uptrend) or low of the last bullish candle (in a downtrend).",
+    "exit condition": "Ride the trend using a trailing stop loss.",
+    "stop loss logic": "Below the entry candle or below the nearest swing low (with buffer).",
+    "indicators used": "Floor Pivots, Moving Averages (20MA, 50MA, 200MA), Candlesticks",
+    "timeframe suitability": "5-minute, 15-minute"
+  },
+  {
+    "name": "Entry After a Minor Pullback Midway in a Strong Trend",
+    "entry condition": "In a very strong trend, look for a tiny 1-2 candle counter-trend pullback (Lilliput candles). Enter when the high of the red candle is taken out (uptrend) or low of the green candle is broken (downtrend).",
+    "exit condition": "Ride the trend using a trailing stop loss.",
+    "stop loss logic": "Below the low of the entry candle or recent swing low.",
+    "indicators used": "Moving Averages, Price Action",
+    "timeframe suitability": "5-minute, 15-minute"
+  },
+  {
+    "name": "Entry on Trend Resumption after a Sideways Move",
+    "entry condition": "Identify a sideways consolidation marked by tiny candles and low volume. Enter on a breakout/breakdown from the range, often signaled by a large expansion candle.",
+    "exit condition": "Ride the trend using a trailing stop loss.",
+    "stop loss logic": "Below the entry candle or just outside the consolidation range.",
+    "indicators used": "Moving Averages (20MA, 200MA), Volume",
+    "timeframe suitability": "5-minute, 15-minute"
+  },
+  {
+    "name": "Entry on Trend Resumption Upon the Appearance of a Rejection Candle",
+    "entry condition": "A retracement ends with a strong rejection candle at a support or resistance. Enter on the next candle when it takes out the high (or low) of the rejection candle.",
+    "exit condition": "Ride the trend using a trailing stop loss.",
+    "stop loss logic": "Below the recent low or entry candle.",
+    "indicators used": "Rejection Candlesticks, Support/Resistance, Moving Averages",
+    "timeframe suitability": "5-minute, 15-minute"
+  },
+  {
+    "name": "Trading Gaps (Trend Resumption)",
+    "entry condition": "If gap is in trend direction, enter on pullback to support. If no pullback, buy breakout of first 5/15 min range. If gap is counter-trend, wait for pullback to resistance/support in the main trend direction to enter.",
+    "exit condition": "Trail stop loss for trend continuation.",
+    "stop loss logic": "Below/above the entry candle or nearest support/resistance.",
+    "indicators used": "Gaps, Support/Resistance, Moving Averages",
+    "timeframe suitability": "5-minute, 15-minute"
+  },
+  {
+    "name": "Trap Trading Technique 1: Ranging Markets",
+    "entry condition": "In a sideways market, price temporarily pierces a boundary but fails to see follow-through. Fade the false breakout by entering in the opposite direction of the trap.",
+    "exit condition": "Target the opposite boundary of the range.",
+    "stop loss logic": "Strict stop loss just outside the failed breakout bar or nearest swing high/low (max 1 bar risk).",
+    "indicators used": "Range boundaries, Support/Resistance, Candlesticks",
+    "timeframe suitability": "5-minute, 15-minute"
+  },
+  {
+    "name": "Trap Trading Technique 2: Correction Ends and the Trend Resumes",
+    "entry condition": "During a pullback in an uptrend, the price gaps down and traps shorts, failing to continue lower. Enter long as the main trend resumes aggressively.",
+    "exit condition": "Ride the resumed trend using a trailing stop loss.",
+    "stop loss logic": "Below the recent trap low.",
+    "indicators used": "Gaps, 200 MA, Support/Resistance",
+    "timeframe suitability": "5-minute, 15-minute"
+  },
+  {
+    "name": "Trap Trading Technique 3: Trend Ends, Correction Begins",
+    "entry condition": "After an extended trend far away from moving averages, a gap opens but immediately stalls, trapping late entrants. Enter counter-trend when a reversal is confirmed.",
+    "exit condition": "Target a mean reversion to the 20MA or 200MA.",
+    "stop loss logic": "Above the extreme high or below the extreme low of the trap.",
+    "indicators used": "Gaps, Distance from Moving Averages (20MA)",
+    "timeframe suitability": "5-minute, 15-minute"
+  }
+]
+
+
+prompt 3 
+
+```json
+[
+  {
+    "name": "NYSE TICK ($TICK)",
+    "formula": "Number of stocks on the NYSE that are increasing in price minus those that are decreasing in price.",
+    "parameters": "Action levels at +1000, +800, +600, -600, -800, and -1000 ticks.",
+    "buy signal condition": "Fade extreme negative readings by buying at the market when ticks hit -1000.",
+    "sell signal condition": "Fade extreme positive readings by shorting at the market when ticks hit +1000."
+  },
+  {
+    "name": "TIKI ($TIKI)",
+    "formula": "Net upticks versus downticks on the 30 Dow stocks.",
+    "parameters": "Alerts set to fire off at +26, +28, and +30 on the upside, and -26, -28, and -30 on the downside.",
+    "buy signal condition": "When buy programs are driving markets to new highs, the occasional sell program is a buying opportunity.",
+    "sell signal condition": "When sell programs are driving markets to new lows, the occasional buy program is a shorting opportunity."
+  },
+  {
+    "name": "TRIN (Arms Index)",
+    "formula": "(Advancing issues / Declining issues) / (Advancing volume / Declining volume)",
+    "parameters": "Often smoothed using a 10-day or 21-day moving average.",
+    "buy signal condition": "A daily close above 2.0 indicates an 80% chance of a rally the next day. Alternatively, a 10-day average over 1.20 implies an oversold (buy) condition.",
+    "sell signal condition": "A daily close below 0.60 indicates an 80% chance of selling off the next day. Alternatively, a 10-day average under 0.70 implies an overbought (sell) condition."
+  },
+  {
+    "name": "Put/Call Ratio (PC Ratio)",
+    "formula": "Volume for put options divided by the volume for call options.",
+    "parameters": "Usually evaluated using the combined equity/index PC ratio.",
+    "buy signal condition": "When the combined equity/index PC ratio gets over 1.0 intraday (indicates extreme bearishness).",
+    "sell signal condition": "Low ratios indicating extreme bullishness and complacency (precise threshold not explicitly quantified for sell setup)."
+  },
+  {
+    "name": "Floor Pivot Points",
+    "formula": "Pivot = (High + Low + Close) / 3. \nS1 = (2 * Pivot) - High. \nS2 = Pivot - (High - Low). \nS3 = S1 - (High - Low). \nR1 = (2 * Pivot) - Low. \nR2 = Pivot + (High - Low). \nR3 = R1 + (High - Low).",
+    "parameters": "High, Low, and Close from the previous session (often 24-hour data for futures).",
+    "buy signal condition": "Buy a decline into the closest pivot or support level (S1, S2, S3), placing a limit order 'just in front of' the level.",
+    "sell signal condition": "Short a rally into the closest pivot or resistance level (R1, R2, R3), placing a limit order 'just in front of' the level."
+  },
+  {
+    "name": "Simple Moving Average (SMA)",
+    "formula": "Sum of a set of data (usually closing prices) divided by the number of observations.",
+    "parameters": "Common lengths include 9, 20, 50, and 200 periods (days, weeks, or intraday intervals).",
+    "buy signal condition": "Price crosses above the moving average, or a shorter-term average crosses above a longer-term average.",
+    "sell signal condition": "Price crosses below the moving average, or a shorter-term average crosses below a longer-term average."
+  },
+  {
+    "name": "Exponential Moving Average (EMA)",
+    "formula": "Current Price * Exponent + Previous EMA * (1 - Exponent)",
+    "parameters": "Common lengths include 9, 18, and 20 periods.",
+    "buy signal condition": "Price or a faster EMA (e.g., 9-period) crosses above a slower EMA (e.g., 18-period).",
+    "sell signal condition": "Price or a faster EMA crosses below a slower EMA."
+  },
+  {
+    "name": "Moving Average Envelopes",
+    "formula": "Lines placed at fixed percentages above and below a moving average line.",
+    "parameters": "Commonly 3% or 5% around a 21-day or 10-week moving average.",
+    "buy signal condition": "Price moves outside the lower envelope, indicating an oversold/overextended market.",
+    "sell signal condition": "Price moves outside the upper envelope, indicating an overbought/overextended market."
+  },
+  {
+    "name": "Bollinger Bands",
+    "formula": "Trading bands placed two standard deviations above and below a moving average.",
+    "parameters": "Typically a 20-period moving average with 2 standard deviations.",
+    "buy signal condition": "Price touches the lower band (oversold), often confirmed by oscillator divergences.",
+    "sell signal condition": "Price touches the upper band (overbought), often confirmed by oscillator divergences."
+  },
+  {
+    "name": "Momentum",
+    "formula": "M = V - Vx (where V is the latest close and Vx is the close x periods ago).",
+    "parameters": "10 days (or periods) is the most common parameter.",
+    "buy signal condition": "Indicator reverses from an oversold extreme or crosses above the zero line in a primary uptrend.",
+    "sell signal condition": "Indicator reverses from an overbought extreme or crosses below the zero line in a primary downtrend."
+  },
+  {
+    "name": "Rate of Change (ROC)",
+    "formula": "100 * (V / Vx) (where V is the latest close and Vx is the close x periods ago).",
+    "parameters": "10 days, or 9, 12, 18, and 24 months for long-term charts.",
+    "buy signal condition": "Crosses back above the 100 midpoint line or exhibits positive divergence in an oversold area.",
+    "sell signal condition": "Crosses back below the 100 midpoint line or exhibits negative divergence in an overbought area."
+  },
+  {
+    "name": "Commodity Channel Index (CCI)",
+    "formula": "Compares current price with a moving average, normalized by a divisor based on mean deviation.",
+    "parameters": "Usually 20 days.",
+    "buy signal condition": "Values rise over +100 (Lambert's original rule) or it turns upward before prices at bottoms.",
+    "sell signal condition": "Values fall below -100 (Lambert's original rule) or it turns downward before prices at tops."
+  },
+  {
+    "name": "Relative Strength Index (RSI)",
+    "formula": "100 - [100 / (1 + RS)], where RS = Average of x days' up closes / Average of x days' down closes.",
+    "parameters": "Default time span is 14 periods (also 9, 25, 30, and 45 periods).",
+    "buy signal condition": "Crosses above the 30 line from below, or shows positive divergence when under 30.",
+    "sell signal condition": "Crosses below the 70 line from above, or shows negative divergence when over 70."
+  },
+  {
+    "name": "Stochastics",
+    "formula": "%K = 100 * [(C - Lx) / (Hx - Lx)]. \n%D = 100 * (H3 / L3), where H3 is a 3-period sum of (C - Lx) and L3 is a 3-period sum of (Hx - Lx).",
+    "parameters": "Usually 14 periods (or 5 periods). Overbought level = 80, Oversold level = 20.",
+    "buy signal condition": "The faster %K line crosses above the slower %D line while below the 20 level.",
+    "sell signal condition": "The faster %K line crosses below the slower %D line while above the 80 level."
+  },
+  {
+    "name": "Larry Williams %R",
+    "formula": "(High of range - Today's close) / Total range. (Often plotted inverted).",
+    "parameters": "Usually 10, 14, or 20 days. Overbought = 80, Oversold = 20.",
+    "buy signal condition": "Readings under 20 identify oversold extremes.",
+    "sell signal condition": "Readings over 80 identify overbought extremes."
+  },
+  {
+    "name": "Moving Average Convergence/Divergence (MACD)",
+    "formula": "MACD line = Difference between a 12-period and 26-period Exponential Moving Average. Signal line = 9-period EMA of the MACD line.",
+    "parameters": "12, 26, and 9 periods.",
+    "buy signal condition": "The faster MACD line crosses above the slower signal line, preferably below the zero line.",
+    "sell signal condition": "The faster MACD line crosses below the slower signal line, preferably above the zero line."
+  },
+  {
+    "name": "Demand Index (DI)",
+    "formula": "Ratio of Buying Pressure (BP) to Selling Pressure (SP). Complex formulation factoring volume, % price change, and volatility.",
+    "parameters": "10-day Volatility Average.",
+    "buy signal condition": "Positive divergences with price, or breaking trendlines on the indicator.",
+    "sell signal condition": "Negative divergences with price, or breaking trendlines on the indicator."
+  },
+  {
+    "name": "Directional Movement System (+DI / -DI / ADX)",
+    "formula": "ADX is an average of the +DI and -DI lines. The DI lines measure positive (upward) and negative (downward) movement.",
+    "parameters": "Standard default time span is 14 periods.",
+    "buy signal condition": "The +DI line crosses over the -DI line.",
+    "sell signal condition": "The +DI line crosses below the -DI line."
+  },
+  {
+    "name": "Parabolic System (SAR)",
+    "formula": "Trailing stop and reverse system that curves like a parabola.",
+    "parameters": "Not explicitly detailed mathematically in the text.",
+    "buy signal condition": "Stop and reverse points (dots) move below the price action.",
+    "sell signal condition": "Stop and reverse points (dots) move above the price action."
+  },
+  {
+    "name": "McClellan Oscillator",
+    "formula": "Difference between the 19-day (10% trend) and 39-day (5% trend) exponential moving averages of daily net advance-decline figures.",
+    "parameters": "19-day and 39-day EMA. Upper extreme = +100, Lower extreme = -100.",
+    "buy signal condition": "Crosses back above the zero line or reverses from readings below -100.",
+    "sell signal condition": "Crosses back below the zero line or reverses from readings above +100."
+  },
+  {
+    "name": "Chaikin Money Flow (CMF)",
+    "formula": "SUM(AD, n) / SUM(VOL, n) where AD = VOL * (CL - OP) / (HI - LO)",
+    "parameters": "e.g., 10 periods or 21 periods.",
+    "buy signal condition": "Positive divergence where the indicator stays above the zero line (closing in upper half on increased volume).",
+    "sell signal condition": "Negative divergence where the indicator stays below the zero line while prices hit new highs."
+  },
+  {
+    "name": "On Balance Volume (OBV)",
+    "formula": "Continuous, cumulative line. Volume is added when price rises and subtracted when price falls.",
+    "parameters": "Cumulative track dependent on timeframe.",
+    "buy signal condition": "Positive divergence or a joint upward trendline break alongside price.",
+    "sell signal condition": "Negative divergence or a joint downward trendline break alongside price."
+  },
+  {
+    "name": "Know Sure Thing (KST)",
+    "formula": "Summed Rate of Change (ROC) smoothed by MAs. Long-Term Formula: (9-month ROC * 1) + (12-month ROC * 2) + (18-month ROC * 3) + (24-month ROC * 4).",
+    "parameters": "Varies (Short-term, Intermediate, Long-term settings).",
+    "buy signal condition": "Reverses direction from below zero or crosses above its own moving average.",
+    "sell signal condition": "Reverses direction from an overbought condition above zero or crosses below its moving average."
+  },
+  {
+    "name": "Special K (SPK)",
+    "formula": "Sum of short-term, intermediate-term, and long-term KST formulations based on daily data.",
+    "parameters": "Various ROC combinations from 10 days to 530 days, multiplied by weights and smoothed.",
+    "buy signal condition": "Indicator reverses direction at a primary-trend turning point, indicated by moving-average crossovers or trendline violations.",
+    "sell signal condition": "Indicator reverses trajectory at a peak, breaking a trendline or moving average crossover."
+  }
+]
+```

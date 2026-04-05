@@ -1,0 +1,41 @@
+{
+  "stocks": {
+    "enabled": true,
+    "symbols": [
+      "AAPL",
+      "MSFT",
+      "GOOGL",
+      "TSLA",
+      "NVDA"
+    ]
+  },
+  "etfs": {
+    "enabled": false,
+    "symbols": [
+      "SPY",
+      "QQQ",
+      "IWM"
+    ]
+  },
+  "options": {
+    "enabled": false,
+    "symbols": [
+      "SPY",
+      "QQQ"
+    ]
+  },
+  "crypto": {
+    "enabled": false,
+    "note": "Requires Alpaca Crypto subscription",
+    "symbols": [
+      "BTC/USD",
+      "ETH/USD"
+    ]
+  },
+  "settings": {
+    "position_size": 1,
+    "max_positions": 5,
+    "risk_percent": 2,
+    "notes": "Edit symbols list above to change what to trade"
+  }
+}

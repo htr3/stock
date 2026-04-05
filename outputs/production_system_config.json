@@ -1,0 +1,21 @@
+{
+  "threshold": 0.8,
+  "trades_per_period": 10,
+  "win_rate": 0.8,
+  "profit_factor": 8.2,
+  "expected_return": 0.3144,
+  "sharpe_ratio": 18.61,
+  "risk_per_trade": 0.02,
+  "stop_loss": 0.005,
+  "target_profit": 0.01,
+  "features": [
+    "hour",
+    "volume_lag_2",
+    "atr",
+    "day_of_week",
+    "volume_trend",
+    "rolling_std_5",
+    "return_5",
+    "macd_histogram"
+  ]
+}

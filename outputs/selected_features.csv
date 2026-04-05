@@ -1,0 +1,10 @@
+feature,rank
+hour,1
+volume_lag_2,2
+body_abs,3
+volume_lag_3,4
+lower_wick,5
+stoch_d,6
+return_5,7
+volume_trend,8
+atr,9
