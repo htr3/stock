@@ -145,6 +145,62 @@ class FeatureSelector:
         return signature['feature'].tolist()
 
 
+class ICFeatureSelector:
+    """
+    Information-Coefficient based feature selector.
+
+    For each feature it computes the Spearman rank correlation between the
+    feature value at time t and the (signed) forward return at t+horizon.
+    Features are then ranked by absolute IC and the top-K are kept.
+
+    This is the selection scheme implied by Plan B Phase 3 -- it does NOT
+    fit a model, so it cannot leak future information through tree splits.
+    """
+
+    def __init__(self, top_k: int = 60, method: str = "spearman"):
+        if top_k <= 0:
+            raise ValueError("top_k must be > 0")
+        if method not in {"spearman", "pearson"}:
+            raise ValueError("method must be 'spearman' or 'pearson'")
+        self.top_k = top_k
+        self.method = method
+        self.ic_: pd.Series | None = None
+        self.selected_: list[str] | None = None
+
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "ICFeatureSelector":
+        if len(X) != len(y):
+            raise ValueError("X and y must have the same length")
+
+        ics = {}
+        y_aligned = y.reindex(X.index) if isinstance(y, pd.Series) else pd.Series(y, index=X.index)
+        for col in X.columns:
+            s = X[col]
+            mask = s.notna() & y_aligned.notna()
+            if mask.sum() < 30:
+                ics[col] = 0.0
+                continue
+            try:
+                if self.method == "spearman":
+                    ic = s[mask].rank().corr(y_aligned[mask].rank())
+                else:
+                    ic = s[mask].corr(y_aligned[mask])
+            except Exception:
+                ic = 0.0
+            ics[col] = 0.0 if pd.isna(ic) else float(ic)
+
+        self.ic_ = pd.Series(ics).sort_values(key=lambda s: s.abs(), ascending=False)
+        self.selected_ = self.ic_.head(self.top_k).index.tolist()
+        return self
+
+    def transform(self, X: pd.DataFrame) -> pd.DataFrame:
+        if self.selected_ is None:
+            raise RuntimeError("ICFeatureSelector not fitted yet")
+        return X[[c for c in self.selected_ if c in X.columns]]
+
+    def fit_transform(self, X: pd.DataFrame, y: pd.Series) -> pd.DataFrame:
+        return self.fit(X, y).transform(X)
+
+
 def main():
     """Run feature selection analysis"""
     

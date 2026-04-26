@@ -1,0 +1,18 @@
+{
+  "feature_guard": {
+    "psi_threshold": 0.1,
+    "null_rate_max": 0.05,
+    "outlier_threshold": 3.0
+  },
+  "risk_guard": {
+    "max_position_size": 0.1,
+    "max_drawdown": 0.15,
+    "volatility_gate": 2.0,
+    "circuit_breaker": 0.05
+  },
+  "execution": {
+    "slippage_model": "simple",
+    "position_decay_days": 7
+  }
+}
+

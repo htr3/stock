@@ -1,0 +1,17 @@
+{
+  "schedule": "daily",
+  "triggers": ["f1_score_drop<0.02", "data_volume>10000", "psi_drift>0.05"],
+  "hyperparams": {
+    "xgboost": {
+      "n_estimators": [100, 200],
+      "max_depth": [6, 8],
+      "learning_rate": [0.05, 0.1]
+    }
+  },
+  "promotion_rules": {
+    "walk_forward_f1": ">0.55",
+    "out_sample_sharpe": ">1.0",
+    "paper_trade_winrate": ">0.55"
+  }
+}
+

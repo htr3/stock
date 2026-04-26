@@ -1,271 +1,363 @@
+#!/usr/bin/env python3
 """
-PRODUCTION TRADING ENGINE - Simplified
-Professional Risk Management + Threshold Optimization
-"""
+Production Trading Engine -- India / Dhan / NSE.
 
+Pipeline per cycle:
+  1. Force-exit any open positions whose stop / target / time-stop / 15:20
+     square-off triggered.
+  2. Fetch the latest 10-min bars from Dhan.
+  3. Engineer features.
+  4. Predict via the loaded champion model.
+  5. Run validator gates.
+  6. If signal + gates + RiskManager.can_trade_now: size with RiskManager and
+     submit a Dhan cover order with attached stop-loss.
+
+This file deliberately drops the Alpaca import; the legacy fetcher is left in
+the repo for back-compat with US notebooks but is no longer in the production
+import graph.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import sys
+import time
+from datetime import datetime
+from pathlib import Path
+from typing import Dict, List, Optional
+from zoneinfo import ZoneInfo
+
+import joblib
 import pandas as pd
-import numpy as np
-from xgboost import XGBClassifier
-from feature_engineering import FeatureEngineer
-from target_variable import TargetVariable
-from data_preparation import DataPipeline
+
+if sys.platform == "win32":  # pragma: no cover
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+
+sys.path.insert(0, str(Path(__file__).parent))
+
+from dhan_data_fetcher import DhanLiveDataFetcher, DhanSymbol  # noqa: E402
+from feature_engineering import FeatureEngineer  # noqa: E402
+from production_validator import ProductionValidator  # noqa: E402
+from risk_manager import IST, Position, RiskManager, RiskParams  # noqa: E402
+
+ROOT = Path(__file__).parent.parent
 
 
 class ProductionTradingEngine:
-    """Professional trading system with optimized parameters"""
-    
-    def __init__(self, df, initial_capital=10000):
-        self.df = df
-        self.initial_capital = initial_capital
-        self.threshold_results = []
-    
-    def prepare_data_and_model(self):
-        """Prepare data and train model"""
-        print("\nPreparing and training model...")
-        
-        # Generate features
-        engineer = FeatureEngineer(self.df)
-        features = engineer.generate_all_features()
-        targets = TargetVariable.create_all_targets(self.df)
-        
-        # Prepare
-        pipeline = DataPipeline(features, targets)
-        X_train, X_test, y_train, y_test = pipeline.prepare(
-            target_col='target_direction'
-        )
-        
-        # Load best 8 features
-        best_features = pd.read_csv('../outputs/top_20_independent.csv')['feature'].tolist()
-        features_to_use = [f for f in best_features if f in X_train.columns]
-        
-        X_train_clean = X_train[features_to_use]
-        X_test_clean = X_test[features_to_use]
-        
-        # Train XGBoost
-        model = XGBClassifier(
-            n_estimators=100, max_depth=5, learning_rate=0.1,
-            random_state=42, verbosity=0
-        )
-        model.fit(X_train_clean, y_train, verbose=False)
-        
-        # Predictions
-        predictions = model.predict(X_test_clean)
-        probabilities = model.predict_proba(X_test_clean)[:, 1]
-        returns = targets['price_change_pct'].iloc[len(X_train):]
-        df_test = self.df.iloc[len(X_train):]
-        
-        print(f"Using {len(features_to_use)} features")
-        print(f"Test set: {len(predictions)} periods")
-        
-        return {
-            'predictions': predictions,
-            'probabilities': probabilities,
-            'returns': returns,
-            'df_test': df_test,
-            'X_test': X_test_clean,
-        }
-    
-    def optimize_thresholds(self, data):
-        """Test multiple confidence thresholds"""
-        
-        predictions = data['predictions']
-        probabilities = data['probabilities']
-        returns = data['returns']
-        X_test = data['X_test']
-        
-        print("\n" + "="*70)
-        print("THRESHOLD OPTIMIZATION (Risk: 2% per trade, SL: 0.5%, TP: 1.0%)")
-        print("="*70)
-        
-        thresholds = [0.55, 0.60, 0.65, 0.70, 0.75, 0.80]
-        
-        for threshold in thresholds:
-            result = self.backtest_threshold(
-                predictions, probabilities, returns, X_test,
-                threshold=threshold
+    def __init__(
+        self,
+        dry_run: bool = True,
+        paper: bool = True,
+        equity_override: Optional[float] = None,
+    ):
+        self.dry_run = dry_run
+        self.paper = paper
+        self.cycles = 0
+        self.log_dir = ROOT / "logs" / "production"
+        self.log_dir.mkdir(parents=True, exist_ok=True)
+        self.trades_log = self.log_dir / f"trades_{datetime.now().strftime('%Y%m%d')}.jsonl"
+
+        self.fetcher = DhanLiveDataFetcher(paper=paper)
+        self.symbols: List[DhanSymbol] = self.fetcher.get_symbols()
+
+        self.bundle = self._load_champion()
+        self.model = self.bundle.get("model") if self.bundle else None
+        self.selector = self.bundle.get("selector") if self.bundle else None
+        self.feature_columns = self.bundle.get("feature_columns") if self.bundle else None
+
+        equity = equity_override or float(self.fetcher.account_status().get("equity", 100_000.0))
+        self.risk = RiskManager(
+            RiskParams(
+                account_equity=equity,
+                risk_per_trade=0.01,
+                atr_stop_mult=1.5,
+                atr_target_mult=2.5,
+                max_trades_per_day=5,
+                max_horizon_bars=5,
+                bar_minutes=10,
             )
-            self.threshold_results.append(result)
-            
-            if result['trades'] > 0:
-                print(f"\nThreshold: {threshold:.2f}")
-                print(f"  Trades: {result['trades']} | Win Rate: {result['win_rate']*100:.0f}% | "
-                      f"Profit: {result['total_return']*100:+.1f}% | Sharpe: {result['sharpe']:.2f} | "
-                      f"PF: {result['profit_factor']:.2f}")
-            else:
-                print(f"\nThreshold: {threshold:.2f} - No trades")
-        
-        # Find best
-        results_df = pd.DataFrame(self.threshold_results)
-        results_with_trades = results_df[results_df['trades'] > 0]
-        
-        if len(results_with_trades) > 0:
-            best = results_with_trades.loc[results_with_trades['profit_factor'].idxmax()]
-        else:
-            best = results_df.iloc[0]
-        
-        print("\n" + "="*70)
-        print("BEST CONFIGURATION")
-        print("="*70)
-        print(f"Threshold:      {best['threshold']:.2f}")
-        print(f"Trades:         {int(best['trades'])}")
-        print(f"Win Rate:       {best['win_rate']*100:.1f}%")
-        print(f"Profit Factor:  {best['profit_factor']:.2f}x")
-        print(f"Return:         {best['total_return']*100:+.2f}%")
-        print(f"Sharpe Ratio:   {best['sharpe']:.2f}")
-        print(f"Max Drawdown:   {best['max_drawdown']*100:.1f}%")
-        
-        return results_df, best
-    
-    def backtest_threshold(self, predictions, probabilities, returns, X_test,
-                          threshold=0.60, risk_pct=0.02, sl_pct=0.005, tp_pct=0.01):
-        """
-        Backtest with stop loss and target
-        
-        risk_pct: 2% per trade
-        sl_pct: 0.5% stop loss
-        tp_pct: 1.0% target
-        """
-        
-        equity = self.initial_capital
-        trades = []
-        
-        for i in range(len(predictions)):
-            confidence = probabilities[i]
-            prediction = predictions[i]
-            market_return = returns.iloc[i]
-            
-            # Trade if confidence > threshold
-            if confidence > threshold:
-                
-                # Position sizing
-                risk_amount = equity * risk_pct
-                position_size = risk_amount / sl_pct
-                
-                # Trade direction
-                if prediction == 1:
-                    if market_return > tp_pct:
-                        trade_profit = position_size * tp_pct
-                    elif market_return < -sl_pct:
-                        trade_profit = -position_size * sl_pct
-                    else:
-                        trade_profit = position_size * market_return
-                else:
-                    if market_return < -tp_pct:
-                        trade_profit = position_size * tp_pct
-                    elif market_return > sl_pct:
-                        trade_profit = -position_size * sl_pct
-                    else:
-                        trade_profit = -position_size * market_return
-                
-                equity += trade_profit
-                trades.append({'profit': trade_profit})
-        
-        # Metrics
-        if len(trades) == 0:
-            return {
-                'threshold': threshold,
-                'trades': 0, 'winning_trades': 0, 'win_rate': 0,
-                'total_return': 0, 'profit_factor': 0, 'sharpe': 0, 'max_drawdown': 0
-            }
-        
-        profits = [t['profit'] for t in trades if t['profit'] > 0]
-        losses = [abs(t['profit']) for t in trades if t['profit'] <= 0]
-        
-        win_rate = len(profits) / len(trades)
-        gross_profit = sum(profits) if profits else 0
-        gross_loss = sum(losses) if losses else 1
-        profit_factor = gross_profit / gross_loss if losses else 0
-        
-        total_return = (equity - self.initial_capital) / self.initial_capital
-        
-        # Sharpe
-        trade_rets = [t['profit'] / self.initial_capital for t in trades]
-        sharpe = (np.mean(trade_rets) / np.std(trade_rets) * np.sqrt(252) 
-                 if np.std(trade_rets) > 0 else 0)
-        
-        return {
-            'threshold': threshold,
-            'trades': len(trades),
-            'winning_trades': len(profits),
-            'win_rate': win_rate,
-            'total_return': total_return,
-            'profit_factor': profit_factor,
-            'sharpe': sharpe,
-            'max_drawdown': 0.10
+        )
+
+        self.open_positions: Dict[str, Position] = {}
+        self.today_trade_count = 0
+        self.today_date: Optional[str] = None
+
+        print("=" * 80)
+        print("Production Trading Engine v2.0  --  Dhan / NSE")
+        print(f"  dry_run={self.dry_run}  paper={self.paper}  equity={equity:,.0f}")
+        print(f"  symbols ({len(self.symbols)}): {', '.join(s.ticker for s in self.symbols)}")
+        print(f"  model loaded: {self.model is not None}")
+        print("=" * 80)
+
+    # ------------------------------------------------------------------
+    # Model loading
+    # ------------------------------------------------------------------
+
+    def _load_champion(self) -> Optional[dict]:
+        # Prefer ModelRegistry champion path so we always run what was promoted.
+        try:
+            from utils.model_registry import ModelRegistry
+            reg = ModelRegistry()
+            path = reg.registry.get("champion")
+            if path and Path(path).exists():
+                bundle = joblib.load(path)
+                print(f"Loaded champion: {path}")
+                return bundle if isinstance(bundle, dict) else {"model": bundle}
+        except Exception as exc:
+            print(f"Registry load failed: {exc}")
+
+        # Fallback: latest XGBoost in models/saved
+        model_dir = ROOT / "models" / "saved"
+        if model_dir.exists():
+            candidates = sorted(model_dir.glob("xgb_walkforward_*.joblib"))
+            if candidates:
+                path = candidates[-1]
+                print(f"Loaded fallback model: {path}")
+                bundle = joblib.load(path)
+                return bundle if isinstance(bundle, dict) else {"model": bundle}
+
+        print("No champion model available -- engine will run in observe-only mode.")
+        return None
+
+    # ------------------------------------------------------------------
+    # Day boundary book-keeping
+    # ------------------------------------------------------------------
+
+    def _roll_day(self, now: datetime) -> None:
+        today = now.astimezone(IST).strftime("%Y-%m-%d")
+        if today != self.today_date:
+            self.today_date = today
+            self.today_trade_count = 0
+
+    # ------------------------------------------------------------------
+    # Feature + signal
+    # ------------------------------------------------------------------
+
+    def _features(self, df_live: pd.DataFrame) -> pd.DataFrame:
+        if df_live.empty:
+            return pd.DataFrame()
+        df_norm = df_live.copy()
+        df_norm.columns = [c.capitalize() if c.lower() in ("open", "high", "low", "close", "volume") else c for c in df_norm.columns]
+        feats = FeatureEngineer(df_norm).generate_all_features()
+        feats = feats.dropna()
+        return feats
+
+    def _signal(self, features: pd.DataFrame) -> Dict:
+        if self.model is None or features.empty:
+            return {"signal": 0, "confidence": 0.0, "error": "no model/features"}
+
+        X = features.tail(1).fillna(0.0)
+        if self.selector is not None:
+            try:
+                X = self.selector.transform(X)
+            except Exception as exc:
+                return {"signal": 0, "confidence": 0.0, "error": f"selector: {exc}"}
+        elif self.feature_columns is not None:
+            X = X[[c for c in self.feature_columns if c in X.columns]]
+
+        try:
+            proba = float(self.model.predict_proba(X)[:, 1][0])
+        except Exception as exc:
+            return {"signal": 0, "confidence": 0.0, "error": f"predict: {exc}"}
+
+        signal = 1 if proba >= 0.55 else 0
+        return {"signal": signal, "confidence": proba, "prob": proba}
+
+    # ------------------------------------------------------------------
+    # Cycle
+    # ------------------------------------------------------------------
+
+    def run_production_cycle(self) -> None:
+        self.cycles += 1
+        now = datetime.now(IST)
+        self._roll_day(now)
+
+        cycle_log = {
+            "cycle": self.cycles,
+            "timestamp": now.isoformat(),
+            "symbols": {},
+            "exits": [],
         }
 
+        # --- Step 1: force-exit pass ---
+        live_data = self.fetcher.fetch_live_bars(symbols=self.symbols, bars_back=200)
 
-def print_system_design():
-    """Print production system design"""
-    
-    print("\n" + "="*70)
-    print("PROFESSIONAL TRADING SYSTEM DESIGN")
-    print("="*70)
-    
-    print("""
-FEATURE SET (8 Independent)
-- hour, volume_lag_2, atr, day_of_week
-- volume_trend, rolling_std_5, return_5, macd_histogram
+        for ticker, position in list(self.open_positions.items()):
+            df = live_data.get(ticker, pd.DataFrame())
+            last_price = float(df["close"].iloc[-1]) if not df.empty and "close" in df else None
+            should_exit, reason = self.risk.should_force_exit(now, position, last_price)
+            if should_exit:
+                self._close_position(ticker, position, last_price, reason, cycle_log)
 
-MODEL: XGBoost (max_depth=5, 100 trees)
+        # --- Step 2-6: signal pass ---
+        for sym in self.symbols:
+            ticker = sym.ticker
+            df_live = live_data.get(ticker, pd.DataFrame())
+            if df_live.empty:
+                cycle_log["symbols"][ticker] = {"status": "no_data"}
+                continue
+            if ticker in self.open_positions:
+                cycle_log["symbols"][ticker] = {"status": "in_position"}
+                continue
 
-TRADE EXECUTION
-- Confidence threshold: OPTIMIZED (0.55-0.80)
-- Risk per trade: 2% of account (NOT 10%)
-- Stop loss: 0.5% below entry
-- Target: 1.0% above entry (Risk:Reward = 1:2)
+            feats = self._features(df_live)
+            if feats.empty:
+                cycle_log["symbols"][ticker] = {"status": "no_features"}
+                continue
 
-POSITION SIZING
-- Calculate: risk_amount = account * 0.02
-- Position size = risk_amount / stop_loss_pct
-- Example: $10,000 account -> $200 risk -> $200 / 0.5% = $4,000 position
+            ml = self._signal(feats)
 
-SAFETY RULES
-1. Max drawdown: 10% - if hit, STOP trading
-2. Win rate: must stay > 50%
-3. Sharpe ratio: must stay > 1.5
-4. Profit factor: must stay > 1.2
+            df_norm = df_live.copy()
+            df_norm.columns = [c.capitalize() if c.lower() in ("open", "high", "low", "close", "volume") else c for c in df_norm.columns]
+            df_norm["signal"] = ml.get("signal", 0)
+            df_norm["confidence"] = ml.get("confidence", 0.0)
+            df_norm["prediction"] = ml.get("signal", 0)
+            try:
+                gates = ProductionValidator(df_norm, model=self.model).run_all_gates()
+                gate_pass = any(k in gates.get("decision", "") for k in ("SAFE", "READY", "MARGINAL"))
+            except Exception as exc:
+                gates = {"decision": f"validator_error: {exc}", "passed": 0}
+                gate_pass = False
 
-RETRAINING
-- Weekly with rolling 500-1000 candle window
-- NOT 120 candles (too noisy)
-- Check metrics, restart if degraded
+            entry_log = {
+                "signal": ml.get("signal", 0),
+                "confidence": ml.get("confidence", 0.0),
+                "gates": gates.get("decision"),
+                "passed": gates.get("passed", 0),
+            }
 
-IMPROVEMENTS FROM NAIVE APPROACH
-- 2% per trade instead of 10% (5x safer)
-- 0.5% hard stop loss (limits catastrophic losses)
-- Optimized threshold (data-driven, not arbitrary)
-- Position sizing based on risk
-- Clear safety exit rules
-""")
+            if not gate_pass or ml.get("signal", 0) != 1:
+                entry_log["status"] = "no_trade"
+                cycle_log["symbols"][ticker] = entry_log
+                continue
+
+            if not self.risk.can_trade_now(now, self.today_trade_count):
+                entry_log["status"] = "risk_blocked"
+                cycle_log["symbols"][ticker] = entry_log
+                continue
+
+            atr_value = float(feats.tail(1).get("atr", pd.Series([0.0])).iloc[0])
+            price = float(df_norm["Close"].iloc[-1])
+            qty = self.risk.size(price, atr_value, "BUY")
+            if qty <= 0:
+                entry_log["status"] = "size_zero"
+                entry_log["atr"] = atr_value
+                cycle_log["symbols"][ticker] = entry_log
+                continue
+
+            stop = self.risk.stop_price(price, atr_value, "BUY")
+            target = self.risk.target_price(price, atr_value, "BUY")
+
+            entry_log.update(
+                {"status": "trade", "qty": qty, "price": price, "stop": stop, "target": target, "atr": atr_value}
+            )
+
+            if not self.dry_run:
+                resp = self.fetcher.place_cover_order(
+                    sym, qty=qty, side="BUY", stop_price=stop, target_price=target, price=price
+                )
+                entry_log["broker_response"] = resp
+
+            self.open_positions[ticker] = Position(
+                symbol=ticker,
+                side="BUY",
+                qty=qty,
+                entry_price=price,
+                entry_time=now,
+                stop_price=stop,
+                target_price=target,
+                max_horizon_bars=self.risk.p.max_horizon_bars,
+            )
+            self.today_trade_count += 1
+            cycle_log["symbols"][ticker] = entry_log
+            self._append_trade_log({"event": "open", "ticker": ticker, "time": now.isoformat(), **entry_log})
+
+        self._append_trade_log({"event": "cycle", **cycle_log})
+        print(
+            f"Cycle {self.cycles} @ {now.strftime('%H:%M:%S IST')} | "
+            f"open={len(self.open_positions)} trades_today={self.today_trade_count}"
+        )
+
+    def _close_position(
+        self,
+        ticker: str,
+        position: Position,
+        last_price: Optional[float],
+        reason: str,
+        cycle_log: dict,
+    ) -> None:
+        exit_log = {
+            "ticker": ticker,
+            "qty": position.qty,
+            "entry_price": position.entry_price,
+            "exit_price": last_price,
+            "reason": reason,
+            "time": datetime.now(IST).isoformat(),
+        }
+        if not self.dry_run and last_price is not None:
+            sym = next((s for s in self.symbols if s.ticker == ticker), None)
+            if sym is not None:
+                # Close the cover order by submitting an opposite leg.
+                resp = self.fetcher.place_cover_order(
+                    sym,
+                    qty=position.qty,
+                    side="SELL" if position.side == "BUY" else "BUY",
+                    stop_price=last_price,  # stop unused on exit
+                    price=last_price,
+                )
+                exit_log["broker_response"] = resp
+
+        cycle_log["exits"].append(exit_log)
+        self._append_trade_log({"event": "close", **exit_log})
+        self.open_positions.pop(ticker, None)
+
+    def _append_trade_log(self, payload: dict) -> None:
+        try:
+            with open(self.trades_log, "a") as f:
+                f.write(json.dumps(payload, default=str) + "\n")
+        except Exception as exc:
+            print(f"trade-log write failed: {exc}")
+
+    def run_continuous(self, interval_sec: int = 600, duration_hours: Optional[float] = None) -> None:
+        start = datetime.now()
+        try:
+            while True:
+                if duration_hours is not None:
+                    elapsed = (datetime.now() - start).total_seconds() / 3600
+                    if elapsed > duration_hours:
+                        return
+                self.run_production_cycle()
+                time.sleep(interval_sec)
+        except KeyboardInterrupt:
+            print("Stopped by user.")
 
 
-def main():
-    """Run production trading engine"""
-    
-    df = pd.read_csv('../data/raw/AAPL_10min_generated_data.csv')
-    
-    engine = ProductionTradingEngine(df, initial_capital=10000)
-    
-    # Prepare
-    data = engine.prepare_data_and_model()
-    
-    # Optimize
-    results_df, best_config = engine.optimize_thresholds(data)
-    
-    # Save
-    results_df.to_csv('../outputs/production_optimization_results.csv', index=False)
-    print(f"\nSaved results to: production_optimization_results.csv")
-    
-    # Print design
-    print_system_design()
-    
-    return engine, results_df
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--dry-run", action="store_true", help="No live orders; log decisions only")
+    parser.add_argument("--paper", action="store_true", help="Use Dhan paper-mode simulator")
+    parser.add_argument("--equity", type=float, default=None, help="Override account equity (INR)")
+    parser.add_argument("--interval", type=int, default=600)
+    parser.add_argument("--duration", type=float, default=None)
+    parser.add_argument("--single-cycle", action="store_true")
+    args = parser.parse_args()
+
+    paper = args.paper or args.dry_run or not (
+        os.getenv("DHAN_CLIENT_ID") and os.getenv("DHAN_ACCESS_TOKEN")
+    )
+    engine = ProductionTradingEngine(dry_run=args.dry_run, paper=paper, equity_override=args.equity)
+
+    if args.single_cycle:
+        engine.run_production_cycle()
+    else:
+        engine.run_continuous(interval_sec=args.interval, duration_hours=args.duration)
+    return 0
 
 
 if __name__ == "__main__":
-    try:
-        engine, results = main()
-        print("\n[SUCCESS] Production trading engine complete!")
-    except Exception as e:
-        print(f"\n[ERROR] {str(e)}")
+    sys.exit(main())

@@ -1,144 +1,240 @@
 #!/usr/bin/env python3
 """
-🚀 WEB DASHBOARD SERVER
-Real-time trading dashboard with REST API
-"""
+Dashboard server for the India / Dhan production engine.
 
-import sys
-import os
+Stateless: every endpoint reads from disk (the engine's JSONL trade log,
+the model registry, the saved model card). The dashboard never imports the
+engine itself, so it is safe to run alongside live trading.
+
+Endpoints
+---------
+GET  /                  -> dashboard.html
+GET  /api/account       -> Dhan funds + RiskManager config
+GET  /api/positions     -> currently-open positions reconstructed from the
+                           trade log (open events without a matching close)
+GET  /api/trades        -> last N closed + open trades from today's JSONL
+GET  /api/stats         -> session totals (trades, win-rate, net INR/bps)
+GET  /api/model_card    -> current champion + sibling model_card.json
+"""
+from __future__ import annotations
+
 import json
+import os
+import sys
 from datetime import datetime
 from pathlib import Path
+from typing import Any, Dict, List, Optional
 
-if sys.platform == 'win32':
-    sys.stdout.reconfigure(encoding='utf-8')
+if sys.platform == "win32":  # pragma: no cover
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
 
-from flask import Flask, render_template, jsonify
+SCRIPTS = Path(__file__).resolve().parent
+ROOT = SCRIPTS.parent
+sys.path.insert(0, str(SCRIPTS))
+
+from flask import Flask, jsonify, render_template
 from flask_cors import CORS
 
-from alpaca.trading.client import TradingClient
+from dhan_data_fetcher import DhanLiveDataFetcher  # noqa: E402
+from utils.model_registry import ModelRegistry  # noqa: E402
 
-app = Flask(__name__, template_folder='../templates', static_folder='../static')
+app = Flask(
+    __name__,
+    template_folder=str(ROOT / "templates"),
+    static_folder=str(ROOT / "static"),
+)
 CORS(app)
 
-# Global state
-class TradingState:
-    def __init__(self):
-        self.api_key = os.getenv('APCA_API_KEY_ID')
-        self.secret_key = os.getenv('APCA_API_SECRET_KEY')
-        self.trading_client = None
-        
-        if self.api_key and self.secret_key:
+
+PRODUCTION_LOG_DIR = ROOT / "logs" / "production"
+
+
+def _today_log() -> Path:
+    return PRODUCTION_LOG_DIR / f"trades_{datetime.now().strftime('%Y%m%d')}.jsonl"
+
+
+def _read_events(path: Optional[Path] = None) -> List[Dict[str, Any]]:
+    """Read every JSONL event for today (or the given path)."""
+    p = path or _today_log()
+    if not p.exists():
+        return []
+    out: List[Dict[str, Any]] = []
+    with open(p, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
             try:
-                self.trading_client = TradingClient(self.api_key, self.secret_key, paper=True)
-                print("[OK] Alpaca connected")
-            except Exception as e:
-                print(f"[ERROR] {e}")
+                out.append(json.loads(line))
+            except json.JSONDecodeError:
+                continue
+    return out
 
-state = TradingState()
 
-@app.route('/')
+def _open_and_closed(events: List[Dict[str, Any]]) -> tuple[Dict[str, dict], List[dict]]:
+    """
+    Walk events; pair each `open` with the next `close` of the same ticker.
+    Returns (still_open_by_ticker, completed_round_trips).
+    """
+    opens: Dict[str, dict] = {}
+    completed: List[dict] = []
+    for ev in events:
+        kind = ev.get("event")
+        if kind == "open":
+            opens[ev["ticker"]] = ev
+        elif kind == "close":
+            ticker = ev.get("ticker")
+            entry = opens.pop(ticker, None)
+            if entry is None:
+                completed.append({"close": ev})
+                continue
+            entry_px = entry.get("price")
+            exit_px = ev.get("exit_price")
+            qty = entry.get("qty", 0)
+            net_inr = None
+            if entry_px is not None and exit_px is not None and qty:
+                net_inr = (float(exit_px) - float(entry_px)) * float(qty)
+            completed.append(
+                {
+                    "ticker": ticker,
+                    "qty": qty,
+                    "entry_price": entry_px,
+                    "exit_price": exit_px,
+                    "entry_time": entry.get("time"),
+                    "exit_time": ev.get("time"),
+                    "exit_reason": ev.get("reason"),
+                    "net_inr": net_inr,
+                    "stop": entry.get("stop"),
+                    "target": entry.get("target"),
+                }
+            )
+    return opens, completed
+
+
+# ---------------------------------------------------------------------------
+# Routes
+# ---------------------------------------------------------------------------
+
+
+@app.route("/")
 def dashboard():
-    """Serve dashboard"""
-    return render_template('dashboard.html')
+    return render_template("dashboard.html")
 
-@app.route('/api/account')
+
+@app.route("/api/account")
 def get_account():
-    """Get account info"""
+    paper = not (os.getenv("DHAN_CLIENT_ID") and os.getenv("DHAN_ACCESS_TOKEN"))
     try:
-        if not state.trading_client:
-            return jsonify({'error': 'Not connected'}), 500
-        
-        account = state.trading_client.get_account()
-        
-        equity = float(account.equity)
-        pnl = equity - 100000
-        
-        return jsonify({
-            'equity': equity,
-            'cash': float(account.cash),
-            'buying_power': float(account.buying_power),
-            'pnl': pnl,
-            'pnl_pct': (pnl / 100000 * 100),
-            'status': 'ACTIVE'
-        })
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        fetcher = DhanLiveDataFetcher(paper=paper)
+        status = fetcher.account_status()
+    except Exception as exc:
+        return jsonify({"error": str(exc), "mode": "paper" if paper else "live"}), 200
 
-@app.route('/api/positions')
-def get_positions():
-    """Get open positions"""
-    try:
-        if not state.trading_client:
-            return jsonify({'positions': []})
-        
-        positions = state.trading_client.get_all_positions()
-        
-        pos_list = []
-        for pos in positions:
-            pos_list.append({
-                'symbol': pos.symbol,
-                'qty': int(float(pos.qty)),
-                'avg_entry_price': float(pos.avg_entry_price),
-                'current_price': float(pos.current_price),
-                'unrealized_pl': float(pos.unrealized_pl) if pos.unrealized_pl else 0,
-                'unrealized_plpc': float(pos.unrealized_plpc) if pos.unrealized_plpc else 0
-            })
-        
-        return jsonify({'positions': pos_list})
-    except Exception as e:
-        return jsonify({'error': str(e), 'positions': []}), 200
+    equity = float(status.get("equity", 0.0))
 
-@app.route('/api/trades')
-def get_trades():
-    """Get recent trades"""
-    try:
-        log_dir = Path(__file__).parent.parent / 'logs'
-        log_file = log_dir / f'trading_log_{datetime.now().strftime("%Y%m%d")}.json'
-        
-        if log_file.exists():
-            with open(log_file, 'r') as f:
-                trades = json.load(f)
-            return jsonify({'trades': list(reversed(trades[-30:]))})
-        else:
-            return jsonify({'trades': []})
-    except Exception as e:
-        return jsonify({'error': str(e), 'trades': []}), 200
+    # Today's realised P&L from the trade log.
+    _, completed = _open_and_closed(_read_events())
+    realised_inr = sum(c["net_inr"] for c in completed if c.get("net_inr") is not None)
 
-@app.route('/api/stats')
-def get_stats():
-    """Get trading statistics"""
-    try:
-        log_dir = Path(__file__).parent.parent / 'logs'
-        log_file = log_dir / f'trading_log_{datetime.now().strftime("%Y%m%d")}.json'
-        
-        stats = {
-            'total_trades': 0,
-            'buys': 0,
-            'sells': 0,
-            'symbols': []
+    return jsonify(
+        {
+            "mode": "paper" if paper else "live",
+            "broker": "dhan",
+            "equity": equity,
+            "cash": float(status.get("cash", equity)),
+            "pnl": realised_inr,
+            "pnl_pct": (realised_inr / equity * 100.0) if equity else 0.0,
+            "status": status.get("status", "unknown"),
         }
-        
-        if log_file.exists():
-            with open(log_file, 'r') as f:
-                trades = json.load(f)
-            
-            stats['total_trades'] = len(trades)
-            stats['buys'] = len([t for t in trades if t['side'] == 'BUY'])
-            stats['sells'] = len([t for t in trades if t['side'] == 'SELL'])
-            stats['symbols'] = sorted(list(set([t['symbol'] for t in trades])))
-        
-        return jsonify(stats)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+    )
 
-if __name__ == '__main__':
-    print("\n" + "="*70)
-    print("  TRADING DASHBOARD SERVER")
-    print("="*70)
-    print("\n[INFO] Server starting...")
-    print("  URL: http://localhost:5000")
-    print("  Dashboard: http://localhost:5000/")
-    print("\nPress Ctrl+C to stop\n")
-    
-    app.run(host='127.0.0.1', port=5000, debug=False, use_reloader=False)
+
+@app.route("/api/positions")
+def get_positions():
+    opens, _ = _open_and_closed(_read_events())
+    positions = []
+    for ticker, ev in opens.items():
+        positions.append(
+            {
+                "symbol": ticker,
+                "qty": ev.get("qty", 0),
+                "avg_entry_price": ev.get("price"),
+                "stop": ev.get("stop"),
+                "target": ev.get("target"),
+                "entry_time": ev.get("time"),
+                "atr": ev.get("atr"),
+            }
+        )
+    return jsonify({"positions": positions})
+
+
+@app.route("/api/trades")
+def get_trades():
+    events = _read_events()
+    _, completed = _open_and_closed(events)
+    return jsonify({"trades": list(reversed(completed[-30:]))})
+
+
+@app.route("/api/stats")
+def get_stats():
+    events = _read_events()
+    opens, completed = _open_and_closed(events)
+    n = len(completed)
+    pnl_list = [c["net_inr"] for c in completed if c.get("net_inr") is not None]
+    wins = sum(1 for x in pnl_list if x > 0)
+    losses = sum(1 for x in pnl_list if x <= 0)
+    symbols = sorted({c.get("ticker") for c in completed if c.get("ticker")})
+    return jsonify(
+        {
+            "total_trades": n,
+            "open_positions": len(opens),
+            "wins": wins,
+            "losses": losses,
+            "win_rate": (wins / n * 100.0) if n else 0.0,
+            "net_pnl_inr": sum(pnl_list) if pnl_list else 0.0,
+            "symbols": symbols,
+        }
+    )
+
+
+@app.route("/api/model_card")
+def get_model_card():
+    try:
+        reg = ModelRegistry()
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 200
+
+    champion = reg.registry.get("champion")
+    if not champion:
+        return jsonify({"champion": None, "card": None})
+
+    card_path = Path(champion).with_name("model_card.json")
+    card = None
+    if card_path.exists():
+        try:
+            card = json.loads(card_path.read_text())
+        except Exception:
+            card = None
+
+    history = reg.registry.get("history", [])
+    return jsonify(
+        {
+            "champion": champion,
+            "card": card,
+            "history": history[-5:],
+            "rejected": reg.registry.get("challengers", [])[-5:],
+        }
+    )
+
+
+if __name__ == "__main__":
+    print("=" * 70)
+    print("  India / Dhan Trading Dashboard")
+    print("=" * 70)
+    print(f"  URL:  http://localhost:5000")
+    print(f"  Logs: {PRODUCTION_LOG_DIR}")
+    print("=" * 70)
+    app.run(host="127.0.0.1", port=5000, debug=False, use_reloader=False)

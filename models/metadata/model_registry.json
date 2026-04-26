@@ -1,0 +1,131 @@
+{
+  "champion": null,
+  "challengers": [
+    {
+      "path": "C:\\Users\\visha\\All\\stocks\\models\\saved\\xgb_walkforward_20260426-100632.joblib",
+      "timestamp": "2026-04-26T10:06:33.218350Z",
+      "status": "gate_failed",
+      "metrics": {
+        "trades": 57,
+        "win_rate": 0.49122807017543857,
+        "net_pnl_inr": 1360.4682007042086,
+        "net_pnl_bps": 24.63693044383978,
+        "sharpe": -5.73390076166628,
+        "max_drawdown": 3.2094838640651355,
+        "folds": [
+          {
+            "trades": 15,
+            "win_rate": 0.6666666666666666,
+            "net_pnl_inr": 1798.4216395703259,
+            "net_pnl_bps": 121.17125993260039,
+            "sharpe": 11.742444264579454,
+            "max_drawdown": 0.2622728816703611,
+            "avg_bps": 121.17125993260039
+          },
+          {
+            "trades": 18,
+            "win_rate": 0.6111111111111112,
+            "net_pnl_inr": 2736.7552338619976,
+            "net_pnl_bps": 154.36514988143375,
+            "sharpe": 7.159925681610845,
+            "max_drawdown": 3.2094838640651355,
+            "avg_bps": 154.36514988143375
+          },
+          {
+            "trades": 24,
+            "win_rate": 0.2916666666666667,
+            "net_pnl_inr": -3174.708672728115,
+            "net_pnl_bps": -132.99319006483108,
+            "sharpe": -36.104072231189136,
+            "max_drawdown": -0.0,
+            "avg_bps": -132.99319006483108
+          }
+        ]
+      }
+    },
+    {
+      "path": "C:\\Users\\visha\\All\\stocks\\models\\saved\\xgb_walkforward_20260426-100707.joblib",
+      "timestamp": "2026-04-26T10:07:08.209484Z",
+      "status": "gate_failed",
+      "metrics": {
+        "trades": 57,
+        "win_rate": 0.49122807017543857,
+        "net_pnl_inr": 1360.4682007042086,
+        "net_pnl_bps": 24.63693044383978,
+        "sharpe": -5.73390076166628,
+        "max_drawdown": 0.031378921074074334,
+        "folds": [
+          {
+            "trades": 15,
+            "win_rate": 0.6666666666666666,
+            "net_pnl_inr": 1798.4216395703259,
+            "net_pnl_bps": 121.17125993260039,
+            "sharpe": 11.742444264579454,
+            "max_drawdown": 0.006241499951034484,
+            "avg_bps": 121.17125993260039
+          },
+          {
+            "trades": 18,
+            "win_rate": 0.6111111111111112,
+            "net_pnl_inr": 2736.7552338619976,
+            "net_pnl_bps": 154.36514988143375,
+            "sharpe": 7.159925681610845,
+            "max_drawdown": 0.004926447313779347,
+            "avg_bps": 154.36514988143375
+          },
+          {
+            "trades": 24,
+            "win_rate": 0.2916666666666667,
+            "net_pnl_inr": -3174.708672728115,
+            "net_pnl_bps": -132.99319006483108,
+            "sharpe": -36.104072231189136,
+            "max_drawdown": 0.031378921074074334,
+            "avg_bps": -132.99319006483108
+          }
+        ]
+      }
+    },
+    {
+      "path": "C:\\Users\\visha\\All\\stocks\\models\\saved\\xgb_walkforward_20260426-101147.joblib",
+      "timestamp": "2026-04-26T10:11:47.818033Z",
+      "status": "gate_failed",
+      "metrics": {
+        "trades": 57,
+        "win_rate": 0.49122807017543857,
+        "net_pnl_inr": 1350.0749900557832,
+        "net_pnl_bps": 24.45247062043174,
+        "sharpe": -5.761109528356182,
+        "max_drawdown": 0.031413475052654696,
+        "folds": [
+          {
+            "trades": 15,
+            "win_rate": 0.6666666666666666,
+            "net_pnl_inr": 1795.6745730848086,
+            "net_pnl_bps": 120.98591103801725,
+            "sharpe": 11.732467089851104,
+            "max_drawdown": 0.006246888068923208,
+            "avg_bps": 120.98591103801725
+          },
+          {
+            "trades": 18,
+            "win_rate": 0.6111111111111112,
+            "net_pnl_inr": 2733.458521030601,
+            "net_pnl_bps": 154.17949527456256,
+            "sharpe": 7.152816226851338,
+            "max_drawdown": 0.004931878506248012,
+            "avg_bps": 154.17949527456256
+          },
+          {
+            "trades": 24,
+            "win_rate": 0.2916666666666667,
+            "net_pnl_inr": -3179.058104059626,
+            "net_pnl_bps": -133.17619813115732,
+            "sharpe": -36.16861190177099,
+            "max_drawdown": 0.031413475052654696,
+            "avg_bps": -133.17619813115732
+          }
+        ]
+      }
+    }
+  ]
+}

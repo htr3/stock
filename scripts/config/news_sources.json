@@ -1,0 +1,16 @@
+{
+  "newsapi": {
+    "api_key": "YOUR_NEWSAPI_KEY",
+    "symbols": ["RELIANCE.NS", "TCS.NS", "HDFCBANK.NS"]
+  },
+  "google_rss": [
+    "https://economictimes.indiatimes.com/markets/rssfeeds/1977021501.cms",
+    "https://www.moneycontrol.com/rss/stocksmarket.xml"
+  ],
+  "finbert_config": {
+    "model_name": "ProsusAI/finbert",
+    "sentiment_threshold": 0.6,
+    "novelty_hours": 24
+  }
+}
+

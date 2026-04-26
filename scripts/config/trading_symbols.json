@@ -1,0 +1,43 @@
+{
+  "broker": "dhan",
+  "stocks": {
+    "enabled": true,
+    "symbols": [
+      {"ticker": "RELIANCE",  "security_id": "2885",  "exchange": "NSE_EQ"},
+      {"ticker": "TCS",       "security_id": "11536", "exchange": "NSE_EQ"},
+      {"ticker": "HDFCBANK",  "security_id": "1333",  "exchange": "NSE_EQ"},
+      {"ticker": "INFY",      "security_id": "1594",  "exchange": "NSE_EQ"},
+      {"ticker": "ICICIBANK", "security_id": "4963",  "exchange": "NSE_EQ"},
+      {"ticker": "SBIN",      "security_id": "3045",  "exchange": "NSE_EQ"},
+      {"ticker": "BHARTIARTL","security_id": "10604", "exchange": "NSE_EQ"},
+      {"ticker": "ITC",       "security_id": "1660",  "exchange": "NSE_EQ"}
+    ]
+  },
+  "stocks_bse": {
+    "enabled": false,
+    "_note": "BSE intraday equity. Look up the BSE security_id from the Dhan instrument master before enabling.",
+    "symbols": [
+      {"ticker": "RELIANCE",  "security_id": "500325", "exchange": "BSE_EQ"},
+      {"ticker": "TCS",       "security_id": "532540", "exchange": "BSE_EQ"},
+      {"ticker": "HDFCBANK",  "security_id": "500180", "exchange": "BSE_EQ"},
+      {"ticker": "INFY",      "security_id": "500209", "exchange": "BSE_EQ"}
+    ]
+  },
+  "etfs": {
+    "enabled": false,
+    "symbols": []
+  },
+  "options": {
+    "enabled": false,
+    "symbols": []
+  },
+  "crypto": {
+    "enabled": false,
+    "symbols": []
+  },
+  "_legacy_us": {
+    "enabled": false,
+    "note": "Kept only for back-compat with US Alpaca code paths.",
+    "symbols": ["AAPL", "MSFT", "GOOGL", "NVDA", "TSLA", "AMZN", "META", "AMD"]
+  }
+}

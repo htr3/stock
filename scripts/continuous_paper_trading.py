@@ -9,6 +9,7 @@ import os
 import time
 import json
 import argparse
+import joblib
 from datetime import datetime
 from pathlib import Path
 
@@ -22,10 +23,15 @@ from alpaca.trading.client import TradingClient
 from alpaca.trading.requests import MarketOrderRequest
 from alpaca.trading.enums import OrderSide, TimeInForce
 
+# ML Integration
+sys.path.insert(0, str(Path(__file__).parent))
+from live_data_fetcher import LiveDataFetcher
+from production_trading_engine import ProductionTradingEngine
+
 class ContinuousTradingSystem:
     """Continuous paper trading with logging"""
 
-    def __init__(self, api_key=None, secret_key=None, run_interval=300):
+    def __init__(self, dry_run=True, api_key=None, secret_key=None, run_interval=300):
         """
         Initialize system
         run_interval: seconds between trading cycles (default 5 min)
@@ -44,12 +50,19 @@ class ContinuousTradingSystem:
         self.log_file = self.log_dir / f'trading_log_{datetime.now().strftime("%Y%m%d")}.json'
         self.prediction_file = self.log_dir / 'latest_prediction.json'
 
+        # Production Trading Engine (replaces static logic)
+        print("[🤖] Initializing ProductionTradingEngine...")
+        self.dry_run = dry_run
+        self.engine = ProductionTradingEngine(dry_run=self.dry_run)
+        
+        if self.engine.model is None:
+            print("⚠️  No trained model found - skipping ML predictions")
+        
         if not self.api_key or not self.secret_key:
             print("[ERROR] API keys not found")
             self.trading_client = None
-            return
-
-        self.trading_client = TradingClient(self.api_key, self.secret_key, paper=True)
+        else:
+            self.trading_client = TradingClient(self.api_key, self.secret_key, paper=True)
         
         try:
             account = self.trading_client.get_account()
@@ -62,152 +75,29 @@ class ContinuousTradingSystem:
             print(f"[ERROR] {e}")
             self.trading_client = None
 
-    def generate_features(self, df):
-        """Generate ML features"""
-        df = df.copy()
-        df['returns'] = df['Close'].pct_change()
-        df['sma_5'] = df['Close'].rolling(5).mean()
-        df['sma_20'] = df['Close'].rolling(20).mean()
-        df['momentum'] = df['Close'].diff(5)
-        df['volatility'] = df['returns'].rolling(10).std()
-        df['volume_sma'] = df['Volume'].rolling(5).mean()
-        df['rsi'] = self._calculate_rsi(df['Close'], 14)
-        df['macd'] = self._calculate_macd(df['Close'])
-        return df.dropna()
 
-    def _calculate_rsi(self, prices, period=14):
-        delta = prices.diff()
-        gain = (delta.where(delta > 0, 0)).rolling(window=period).mean()
-        loss = (-delta.where(delta < 0, 0)).rolling(window=period).mean()
-        rs = gain / loss
-        return 100 - (100 / (1 + rs))
 
-    def _calculate_macd(self, prices):
-        exp1 = prices.ewm(span=12, adjust=False).mean()
-        exp2 = prices.ewm(span=26, adjust=False).mean()
-        return exp1 - exp2
 
-    def generate_signal(self, df):
-        """Generate trading signal"""
-        latest = df.iloc[-1]
-        signals = 0
-        
-        if latest['sma_5'] > latest['sma_20']:
-            signals += 1
-        if latest['momentum'] > 0:
-            signals += 1
-        if 30 < latest['rsi'] < 70:
-            signals += 1
-        if latest['macd'] > 0:
-            signals += 1
-        
-        decision = 1 if signals >= 3 else 0
-        confidence = signals / 4.0
-        return decision, confidence
-
-    def place_order(self, symbol, qty, side):
-        """Place paper trade"""
-        if not self.trading_client:
-            return False
-        
-        try:
-            order_side = OrderSide.BUY if side == 'BUY' else OrderSide.SELL
-            request = MarketOrderRequest(
-                symbol=symbol,
-                qty=qty,
-                side=order_side,
-                time_in_force=TimeInForce.DAY
-            )
-            order = self.trading_client.submit_order(request)
-            
-            trade_info = {
-                'timestamp': datetime.now().isoformat(),
-                'symbol': symbol,
-                'side': side,
-                'qty': qty,
-                'order_id': order.id,
-                'status': 'PLACED'
-            }
-            self.trade_log.append(trade_info)
-            
-            # Save immediately
-            self.save_log()
-            
-            print(f"  [{datetime.now().strftime('%H:%M:%S')}] {side} {qty} {symbol}")
-            return True
-        except Exception as e:
-            print(f"  [ERROR] {e}")
-            return False
-
-    def get_pnl(self):
-        """Get current P&L"""
-        try:
-            account = self.trading_client.get_account()
-            return float(account.equity) - 100000  # Paper account starts at $100k
-        except:
-            return 0
 
     def run_trading_cycle(self, symbol='AAPL'):
-        """Execute one trading cycle"""
+        """Execute one trading cycle - DYNAMIC ML PIPELINE"""
         self.cycle_count += 1
         
-        # Load data
-        data_path = Path(__file__).parent.parent / 'data' / 'raw' / f'{symbol}_10min_generated_data.csv'
+        print(f"[{self.cycle_count:04d}] {datetime.now().strftime('%H:%M:%S')} | Running ML cycle for {symbol}...")
         
-        if not data_path.exists():
-            print(f"[ERROR] Data not found: {symbol}")
+        if self.engine.model is None:
+            print(f"  ⚠️  No ML model - skipping {symbol}")
             return
         
-        df = pd.read_csv(data_path)
-        df = df.rename(columns={c: c.capitalize() if c != 'volume' else 'Volume' 
-                               for c in df.columns})
-        
-        # Generate features and signal
-        df = self.generate_features(df)
-        signal, confidence = self.generate_signal(df)
-        latest = df.iloc[-1]
-        
-        prediction = {
-            'timestamp': datetime.now().isoformat(),
-            'symbol': symbol,
-            'signal': 'BUY' if signal == 1 else 'SELL',
-            'confidence': round(confidence * 100, 1),
-            'price': float(latest['Close']),
-            'sma_5': float(latest['sma_5']),
-            'sma_20': float(latest['sma_20']),
-            'rsi': float(latest['rsi']),
-            'macd': float(latest['macd'])
-        }
-        self.save_prediction(prediction)
-        
-        # Get account info
         try:
-            account = self.trading_client.get_account()
-            equity = float(account.equity)
-        except:
-            equity = 0
-        
-        # Display status
-        timestamp = datetime.now().strftime('%H:%M:%S')
-        print(f"[{self.cycle_count:04d}] {timestamp} | {symbol} | ", end='')
-        
-        if signal == 1:
-            print(f"BUY ({confidence:.0%}) | ", end='')
-            self.place_order(symbol, 1, 'BUY')
-        else:
-            print(f"SELL ({confidence:.0%}) | ", end='')
-            try:
-                positions = self.trading_client.get_all_positions()
-                for pos in positions:
-                    if pos.symbol == symbol:
-                        qty = int(float(pos.qty))
-                        self.place_order(symbol, qty, 'SELL')
-                        break
-            except:
-                pass
-        
-        pnl = self.get_pnl()
-        print(f"P&L: ${pnl:+.2f} | Equity: ${equity:,.2f}")
+            # Run full production cycle for this symbol
+            self.engine.run_production_cycle([symbol])
+            
+            # Enhanced logging from engine
+            print(f"  📊 Engine cycles: {self.engine.cycles}, Model: {self.engine.model is not None}")
+                
+        except Exception as e:
+            print(f"  ❌ Error in {symbol}: {e}")
 
     def save_log(self):
         """Save trading log"""
@@ -300,6 +190,7 @@ def main():
                         help='Comma-separated symbols to trade, e.g. AAPL,MSFT,GOOGL')
     parser.add_argument('--interval', type=int, default=int(os.getenv('TRADING_INTERVAL', '10')),
                         help='Seconds between trading cycles')
+    parser.add_argument('--dry-run', action='store_true', default=True, help='Dry run mode')
     parser.add_argument('--duration', type=float, default=None,
                         help='Duration in hours to run (default infinite)')
     parser.add_argument('--config', action='store_true',
@@ -340,6 +231,7 @@ def main():
     print("="*80 + "\n")
 
     system = ContinuousTradingSystem(
+        dry_run=args.dry_run,
         run_interval=args.interval
     )
     

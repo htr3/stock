@@ -96,7 +96,7 @@ class RegimeDetector:
         df = self.df.copy()
         
         # Calculate indicators
-        adx, +di, -di = self.calculate_adx()
+        adx, pos_di, neg_di = self.calculate_adx()
         volatility = self.calculate_volatility()
         vol_ratio = self.calculate_volume_trend()
         

@@ -298,15 +298,21 @@ class TimeFeatures:
     def time_of_day(df: pd.DataFrame) -> pd.DataFrame:
         """Extract time features from timestamp"""
         time_df = pd.DataFrame(index=df.index)
-        if 'timestamp' in df.columns:
-            df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce')
-            time_df['hour'] = df['timestamp'].dt.hour
-            time_df['minute'] = df['timestamp'].dt.minute
-            time_df['day_of_week'] = df['timestamp'].dt.dayofweek
-            time_df['is_opening_hour'] = (df['timestamp'].dt.hour == 9).astype(int)
-            time_df['is_close_hour'] = (df['timestamp'].dt.hour == 16).astype(int)
-            time_df['is_morning'] = (df['timestamp'].dt.hour < 12).astype(int)
-            time_df['is_afternoon'] = (df['timestamp'].dt.hour >= 14).astype(int)
+        
+        # Get timestamps either from column or index
+        timestamps = pd.to_datetime(
+            df['timestamp'] if 'timestamp' in df.columns else pd.Series(df.index, index=df.index), 
+            errors='coerce'
+        )
+        
+        time_df['hour'] = timestamps.dt.hour
+        time_df['minute'] = timestamps.dt.minute
+        time_df['day_of_week'] = timestamps.dt.dayofweek
+        time_df['is_opening_hour'] = (timestamps.dt.hour == 9).astype(int)
+        time_df['is_close_hour'] = (timestamps.dt.hour == 16).astype(int)
+        time_df['is_morning'] = (timestamps.dt.hour < 12).astype(int)
+        time_df['is_afternoon'] = (timestamps.dt.hour >= 14).astype(int)
+        
         return time_df
 
 
